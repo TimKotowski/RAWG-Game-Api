@@ -1,69 +1,55 @@
-This project was bootstrapped with [Create React App](https://github.com/facebook/create-react-app).
+Created a basic api that gets third part api from RAWG, with a list of all the games from the api. 
 
-## Available Scripts
+Used an idiomatic json/encode package called "json iterator" to parse my json (very fast JSON parsing package), use SQLBoiler for the ORM.
 
-In the project directory, you can run:
+As you will see in the code below, ioutil.ReadAll reading all data from a io.Reader and wait for everything to finish downloading-
+Then I get the data back from it and put the matching data from the api and unmarshal the data into a struct called Games, reason being is I want to get only certain data from the api, not everything, so I use a struct to put the data into it. The struct fields have to match data from the api!
 
-### `npm start`
+```golang
+type Results struct {
+	ID               int    `json:"id"`
+	Name             string `json:"name"`
+	Background_Image string `json:"background_image"`
+}
 
-Runs the app in the development mode.<br />
-Open [http://localhost:3000](http://localhost:3000) to view it in the browser.
 
-The page will reload if you make edits.<br />
-You will also see any lint errors in the console.
+type Games struct {
+	Next    string    `json:"next"`
+	Results []Results `json:"results"`
+}
 
-### `npm test`
+```
 
-Launches the test runner in the interactive watch mode.<br />
-See the section about [running tests](https://facebook.github.io/create-react-app/docs/running-tests) for more information.
+You will notice when I decode the response body into NewDecoder I didt do aioutil.ReadAll. One insight that I got as I learned how to use Go is that ReadAll is often inefficient for large readers, in my case with all the data coming in from a api that is sending lots and lots of game titles, can be possibly leaking out memory. When I started out, I used to do JSON parsing like this:
 
-### `npm run build`
+ ```golang
+data, err := ioutil.ReadAll(r)
 
-Builds the app for production to the `build` folder.<br />
-It correctly bundles React in production mode and optimizes the build for the best performance.
+if err != nil {
+log.Fatalf("err %v", err)
+    return err
+}
+var results Games
+jsonData, err := json.Unmarshal(data, &games)
+if err != nil {
+log.Fatalf("err %v", errs)
+    return err
+}
+w.Write(jsonData)
+ ```
+Then, I learned of a much more efficient way of parsing the JSON, using the Decoder type
 
-The build is minified and the filenames include the hashes.<br />
-Your app is ready to be deployed!
 
-See the section about [deployment](https://facebook.github.io/create-react-app/docs/deployment) for more information.
+  ```golang
+	var results Games
+		if err := json.NewDecoder(res.Body).Decode(&results); err != nil {
+			log.Fatalf("errs %v", err)
+			return
+		}
+```
+Not only is this more concise, it is much more efficient, both memory and time wise
 
-### `npm run eject`
+The decoder doesn't have to allocate a huge byte slice to accommodate for the data read-
+Tt can simply re-use a small buffer which will be used against the Read method to get all the data and parse it. This saves a lot of time in allocations
 
-**Note: this is a one-way operation. Once you `eject`, you can’t go back!**
-
-If you aren’t satisfied with the build tool and configuration choices, you can `eject` at any time. This command will remove the single build dependency from your project.
-
-Instead, it will copy all the configuration files and the transitive dependencies (webpack, Babel, ESLint, etc) right into your project so you have full control over them. All of the commands except `eject` will still work, but they will point to the copied scripts so you can tweak them. At this point you’re on your own.
-
-You don’t have to ever use `eject`. The curated feature set is suitable for small and middle deployments, and you shouldn’t feel obligated to use this feature. However we understand that this tool wouldn’t be useful if you couldn’t customize it when you are ready for it.
-
-## Learn More
-
-You can learn more in the [Create React App documentation](https://facebook.github.io/create-react-app/docs/getting-started).
-
-To learn React, check out the [React documentation](https://reactjs.org/).
-
-### Code Splitting
-
-This section has moved here: https://facebook.github.io/create-react-app/docs/code-splitting
-
-### Analyzing the Bundle Size
-
-This section has moved here: https://facebook.github.io/create-react-app/docs/analyzing-the-bundle-size
-
-### Making a Progressive Web App
-
-This section has moved here: https://facebook.github.io/create-react-app/docs/making-a-progressive-web-app
-
-### Advanced Configuration
-
-This section has moved here: https://facebook.github.io/create-react-app/docs/advanced-configuration
-
-### Deployment
-
-This section has moved here: https://facebook.github.io/create-react-app/docs/deployment
-
-### `npm run build` fails to minify
-
-This section has moved here: https://facebook.github.io/create-react-app/docs/troubleshooting#npm-run-build-fails-to-minify
-# RAWG-Game-Api
+The JSON Decoder can start parsing data as soon as the first chunk of data comes in - it doesn't have to wait for everything to finish downloading.
