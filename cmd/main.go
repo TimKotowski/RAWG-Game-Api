@@ -60,7 +60,7 @@ log.Fatalf("err %v", err)
 }
 jsonData, err := json.Unmarshal(data)
 if err != nil {
-log.Fatalf("err %v", err)
+log.Fatalf("err %v", errs)
     return err
 }
 w.Write(jsonData)
