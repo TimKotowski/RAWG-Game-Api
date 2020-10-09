@@ -51,16 +51,3 @@ func main() {
 
 }
 
-
-data, err := ioutil.ReadAll(r)
-
-if err != nil {
-log.Fatalf("err %v", err)
-    return err
-}
-jsonData, err := json.Unmarshal(data)
-if err != nil {
-log.Fatalf("err %v", errs)
-    return err
-}
-w.Write(jsonData)
