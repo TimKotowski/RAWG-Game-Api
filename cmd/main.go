@@ -6,6 +6,7 @@ import (
 	"database/sql"
 	"fmt"
 	"net/http"
+	"os"
 	"time"
 
 	"github.com/go-chi/chi"
@@ -14,10 +15,16 @@ import (
 
 
 func main() {
+	// Get the configuration environment variables.
+	cfg.DBHost = os.Getenv("DB_HOST")
+	cfg.DBPort = os.Getenv("DB_PORT")
+	cfg.DBName = os.Getenv("DB_NAME")
+	cfg.DBUser = os.Getenv("DB_USER")
+	cfg.DBPass = os.Getenv("DB_PASS")
+
 
 	r := chi.NewRouter()
-	psqlInfo := fmt.Sprintf("host=localhost port=5432 user=timkotowski password=butter333 dbname=gaming sslmode=disable")
-	db, err := sql.Open("postgres", psqlInfo)
+	db, err := sql.Open("postgres", "postgres", cfg.DBUser+":"+cfg.DBPass+":"+cfg.DBHost+":"+cfg.DBPort+")/"+cfg.DBName+"sslmode=disable")
 	if err != nil {
 		panic(err)
 	}
