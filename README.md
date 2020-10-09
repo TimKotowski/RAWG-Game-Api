@@ -30,7 +30,7 @@ log.Fatalf("err %v", err)
     return err
 }
 var results Games
-jsonData, err := json.Unmarshal(data, &games)
+jsonData, err := json.Unmarshal(data, &results)
 if err != nil {
 log.Fatalf("err %v", errs)
     return err
