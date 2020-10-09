@@ -52,4 +52,4 @@ Not only is this more concise, it is much more efficient, both memory and time w
 The decoder doesn't have to allocate a huge byte slice to accommodate for the data read-
 Tt can simply re-use a small buffer which will be used against the Read method to get all the data and parse it. This saves a lot of time in allocations
 
-The JSON Decoder can start parsing data as soon as the first chunk of data comes in - it doesn't have to wait for everything to finish downloading.
+The JSON Decoder can start parsing data as soon as the first chunk of data comes in, it doesn't have to wait for everything to finish downloading.
